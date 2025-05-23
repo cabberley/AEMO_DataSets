@@ -12,16 +12,17 @@ import socket
 
 AppgatewayCookieName = 'ApplicationGatewayAffinity'
 createAppGatewayCookie = False   # change to False if you are testing behind app Gateway!
+SiteFQDN = "hsw1.abberley.wtf"
 
 
 servers = []
-serversettings  = ['a1','192.168.4.137',443,'hsw1.crt','hsw1.key']
+serversettings  = ['a1','192.168.4.137',443,'server1.chain.crt','Server.key']
 servers.append(serversettings)
-serversettings  = ['a2','192.168.4.137',8443,'hsw1.crt','hsw1.key']
+serversettings  = ['a2','192.168.4.137',8443,'server1.chain.crt','Server.key']
 servers.append(serversettings)
-serversettings  = ['b1','192.168.4.99',443,'hsw1.crt','hsw1.key']
+serversettings  = ['b1','192.168.4.99',443,'server1.chain.crt','Server.key']
 servers.append(serversettings)
-serversettings  = ['b2','192.168.4.99',8443,'hsw1.crt','hsw1.key']
+serversettings  = ['b2','192.168.4.99',8443,'server1.chain.crt','Server.key']
 servers.append(serversettings)
 
 _healthstatus = {}
@@ -30,7 +31,7 @@ for webserver in servers:
         _healthstatus[webserver[1]]= 0
 
 # In-memory user database (for demonstration purposes)
-USER_DB = {"admin": "password123"}
+USER_DB = {"admin": "pass"}
 
 # Session storage
 SESSIONS = {}
@@ -214,16 +215,15 @@ class CustomHandlerAdmin(http.server.SimpleHTTPRequestHandler):
             self.send_header('Location', '/admin')
             self.end_headers()
 
-
-
-
-
+    
 def serve(host, port, cert_fpath, privkey_fpath):
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)  # Might need to use ssl.PROTOCOL_TLS for older versions of Python
-    context.load_cert_chain(certfile=cert_fpath, keyfile=privkey_fpath, password='WdyWfm.2023')
+    context.load_cert_chain(certfile=cert_fpath, keyfile=privkey_fpath) #, password='WdyWfm.2023')
     server_address = (host, port)
     httpd = http.server.HTTPServer(server_address, CustomHandler)
-    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+    httpd.server_name = SiteFQDN
+    httpd.socket = context.wrap_socket(httpd.socket, server_side=True) #, server_hostname=SiteFQDN)
+    httpd.socket.server_hostname = SiteFQDN
     print(f"Starting HTTPS server on {host}:{port}.../n/r")
     httpd.serve_forever()
 
@@ -236,15 +236,6 @@ def serve_admin(host):
 
 if __name__ == '__main__':
     thread={}
-    # First HTTPS server on port 443
-    PORT1 = 443
-    CERT_FPATH1 = 'hsw1.crt'
-    PRIVKEY_FPATH1 = 'hsw1.key'
-
-    # Second HTTPS server on port 8443
-    PORT2 = 8443
-    CERT_FPATH2 = 'hsw1.crt'
-    PRIVKEY_FPATH2 = 'hsw1.key'
 
     skipserver1 = servers[0][0]
     for webserver in servers:
@@ -256,7 +247,6 @@ if __name__ == '__main__':
     
     admin_sites = list(_healthstatus.keys())
     for keys in admin_sites:
-        #serve_admin(key)
         thread[keys] = threading.Thread(target=serve_admin, args=(keys,))
         thread[keys].daemon = True
         thread[keys].start()
