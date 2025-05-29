@@ -17,14 +17,14 @@ SiteFQDN = "hsw1.abberley.wtf"
 
 
 servers = []
-serversettings  = ['a1','10.0.3.4',443,'server1.chain.crt','Server.key']
+serversettings  = ['a1','10.0.3.6',443,'server1.chain.crt','Server.key']
 servers.append(serversettings)
-serversettings  = ['a2','10.0.3.4',8443,'server1.chain.crt','Server.key']
+serversettings  = ['a2','10.0.3.6',8443,'server1.chain.crt','Server.key']
 servers.append(serversettings)
-serversettings  = ['a1','10.0.3.5',443,'server1.chain.crt','Server.key']
-servers.append(serversettings)
-serversettings  = ['a2','10.0.3.5',8443,'server1.chain.crt','Server.key']
-servers.append(serversettings)
+#serversettings  = ['a1','10.0.3.5',443,'server1.chain.crt','Server.key']
+#servers.append(serversettings)
+#serversettings  = ['a2','10.0.3.5',8443,'server1.chain.crt','Server.key']
+#servers.append(serversettings)
 #serversettings  = ['b1','192.168.4.99',443,'server1.chain.crt','Server.key']
 #servers.append(serversettings)
 #serversettings  = ['b2','192.168.4.99',8443,'server1.chain.crt','Server.key']
@@ -193,7 +193,7 @@ class CustomHandlerAdmin(http.server.SimpleHTTPRequestHandler):
 
     #self.healthstatus = 0
     def do_GET(self):            
-        if self.path == '/admin':
+        if self.path == '/admin' or self.path == '/' or self.path == '':
             # Display admin page
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -201,6 +201,7 @@ class CustomHandlerAdmin(http.server.SimpleHTTPRequestHandler):
 
             self.wfile.write(bytes('<html><head><title>Admin Page</title></head>', 'utf-8'))
             self.wfile.write(bytes('<body><h1>Admin Page</h1>', 'utf-8'))
+            self.wfile.write(b"<a href='/session'>Current Session Table</a>")
             self.wfile.write(bytes('<form method="POST" action="/admin">', 'utf-8'))
             for key, value in _healthstatus.items():
                 self.wfile.write(bytes(f'<label for="{key}">{key} (Current Value: {value}): </label>', 'utf-8'))
@@ -211,6 +212,14 @@ class CustomHandlerAdmin(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(bytes('</select><br>', 'utf-8'))
             self.wfile.write(bytes('<input type="submit" value="Update"></form>', 'utf-8'))
             self.wfile.write(bytes('</body></html>', 'utf-8'))
+        elif self.path == '/session':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes('<html><head><title>Admin Page</title></head>', 'utf-8'))
+            self.wfile.write(bytes('<body><h1>Admin Page</h1>', 'utf-8'))
+            self.wfile.write(b"<a href='/admin'>Maintenance Health Status</a>")
+            self.wfile.write(bytes(f'<p>Sessions           : {SESSIONS}</p>','utf-8'))
         else:
             self.send_response(301)
             self.send_header('Location','/admin')
